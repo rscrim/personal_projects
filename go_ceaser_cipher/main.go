@@ -103,6 +103,7 @@ func mainMenu() int {
 				"3. Exit\n")
 		userInput := getUserInput("\nWhat would you like to do?")
 		choice, err := strconv.Atoi(userInput)
+		handleError(err)
 		if choice == 1 {
 			return 1
 		} else if choice == 2 {
