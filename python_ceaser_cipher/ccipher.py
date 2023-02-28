@@ -1,9 +1,10 @@
 import sys
 
-# Encrypt 'plaintext' using Ceaser Cypher with key of 'shift'
-
 
 def caesar_encrypt(plaintext, shift):
+    """
+    Encrypt 'plaintext' using Ceaser Cypher with key of 'shift'
+    """
     ciphertext = ''
     for c in plaintext:
         if c.isalpha():
@@ -15,10 +16,11 @@ def caesar_encrypt(plaintext, shift):
             ciphertext += c
     return ciphertext
 
-# Decrypt 'plaintext' using Ceaser Cypher with key of 'shift'
-
 
 def caesar_decrypt(ciphertext, shift):
+    """
+    Decrypt 'plaintext' using Ceaser Cypher with key of 'shift'
+    """
     plaintext = ''
     for c in ciphertext:
         if c.isalpha():
@@ -30,10 +32,11 @@ def caesar_decrypt(ciphertext, shift):
             plaintext += c
     return plaintext
 
-# Convert a string to leet (1337) speak
-
 
 def leet(plaintext):
+    """
+    Convert a string to leet (1337) speak
+    """
     leetMap = {
         'A': "4",
         'E': "3",
@@ -64,8 +67,10 @@ def get_user_input(prompt):
             print("Invalid input. Please enter 1, 2 or 3.")
 
 
-# Prints functionality menu
 def main_menu():
+    """
+     Prints functionality menu
+     """
     print("-" * 10)
     print(leet("MAIN MENU"))
     print("-" * 10)
@@ -92,6 +97,9 @@ def main_menu():
 
 
 def get_shift_value(note):
+    """
+Handles user input for cipher shift value
+    """
     while True:
         input = input(note + "\n")
         try:
@@ -122,4 +130,3 @@ while True:
             sys.exit(0)
         case _:
             print("Invalid input. Please enter a number between 1 and 3.")
-
