@@ -1,0 +1,14 @@
+{
+    "manifest_version": 2,
+    "name": "GitHub Code Line Counter",
+    "description": "This extension visualizes the lines of code and the number of lines per programming language within a GitHub repository.",
+    "version": "1.0",
+    "permissions": [
+      "activeTab",
+      "https://api.github.com/*"
+    ],
+    "browser_action": {
+      "default_popup": "popup.html"
+    }
+  }
+  
