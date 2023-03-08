@@ -3,6 +3,7 @@
 
 This package manages all functions related to encrypting and decrypting the passwords.list file
 */
+
 package main
 
 import (
