@@ -10,12 +10,13 @@ generate a cryptographically secure nonce for each encrypted file.
 
 Author: Ryan Scrim
 Date: 2023-03-06
-Version: 1.0
+Version: 1.2
 */
 
 package main
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -26,6 +27,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 var (
@@ -37,6 +39,7 @@ var (
 	algorithmMap = map[string]int{"aes-128-gcm": 16, "aes-192-gcm": 24, "aes-256-gcm": 32}
 )
 
+// main parses the command-line arguments and either encrypts or decrypts a file.
 func main() {
 	flag.StringVar(&filePath, "file", "", "path to file to encrypt/decrypt")
 	flag.StringVar(&password, "password", "", "password used to encrypt/decrypt file")
@@ -69,6 +72,7 @@ func main() {
 	}
 }
 
+// contains checks whether a string is present in a slice of strings.
 func contains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
@@ -78,16 +82,18 @@ func contains(s []string, e string) bool {
 	return false
 }
 
+// encryptFile encrypts a file using AES-GCM encryption.
 func encryptFile(filePath string, password string, algorithm string) error {
 	key, err := generateKey(password, algorithmMap[algorithm])
 	if err != nil {
 		return err
 	}
 
-	plaintext, err := ioutil.ReadFile(filePath)
+	f, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -104,16 +110,38 @@ func encryptFile(filePath string, password string, algorithm string) error {
 		return err
 	}
 
-	ciphertext := gcm.Seal(nonce, nonce, plaintext, nil)
+	// Create a buffer to hold the nonce and encrypted data.
+	ciphertext := make([]byte, 0, len(nonce)+len(algorithm)+len(password))
 
-	err = ioutil.WriteFile(filePath+".enc", ciphertext, 0644)
-	if err != nil {
+	// Write the nonce to the buffer.
+	ciphertext = append(ciphertext, nonce...)
+
+	// Write the encryption algorithm to the buffer.
+	ciphertext = append(ciphertext, []byte(algorithm)...)
+
+	// Create a stream cipher for encrypting the file.
+	stream := cipher.NewCTR(block, nonce)
+
+	// Create a StreamWriter that encrypts data using the stream cipher.
+	writer := &cipher.StreamWriter{S: stream, W: &bytes.Buffer{}}
+
+	// Copy the data from the input file to the StreamWriter.
+	if _, err = io.Copy(writer, f); err != nil {
+		return err
+	}
+
+	// Write the encrypted data to the buffer.
+	ciphertext = append(ciphertext, writer.W.(*bytes.Buffer).Bytes()...)
+
+	// Write the encrypted data to the output file.
+	if err = ioutil.WriteFile(filePath+".enc", ciphertext, 0644); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+// decryptFile decrypts a file that was encrypted with AES-GCM encryption.
 func decryptFile(filePath string, password string, algorithm string) error {
 	key, err := generateKey(password, algorithmMap[algorithm])
 	if err != nil {
@@ -146,14 +174,14 @@ func decryptFile(filePath string, password string, algorithm string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filePath[:len(filePath)-4], plaintext, 0644)
-	if err != nil {
+	if err = ioutil.WriteFile(filePath[:len(filePath)-4], plaintext, 0644); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+// generateKey generates a key for AES encryption using the provided password.
 func generateKey(password string, keySize int) ([]byte, error) {
 	hash := sha256.Sum256([]byte(password))
 	key := make([]byte, keySize)
